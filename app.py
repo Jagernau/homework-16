@@ -1,14 +1,16 @@
-from flask import Flask
+from flask import Flask, jsonify, request
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Column, Integer, ForeignKey, Date, Text, Float
-from sqlalchemy.orm import relationship
+from json import loads
 
 import funcions
 import datetime
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
+app.config['JSON_SORT_KEYS'] = False
+app.config['JSON_AS_ASCII'] = False
 
 db = SQLAlchemy(app)
 
@@ -95,37 +97,57 @@ db.session.commit()
 
 
 
+@app.route("/users", methods=['GET', 'POST'])
+def get_all_users():
+    if request.method == 'GET':
+        all_users = User.query.all()
+        return jsonify(funcions.user_query(all_users))
+
+    if request.method == 'POST':
+        user = loads(request.data)
+        new_user_obj = User(
+            id=user['id'],
+            first_name=user['first_name'],
+            last_name=user['last_name'],
+            age=user['age'],
+            email=user['email'],
+            role=user['role'],
+            phone=user['phone'])
+        db.session.add(new_user_obj)
+        db.session.commit()
+        db.session.close()
+        return "Пользователь добавлен", 200
 
 
 
-#@app.route("/users")
-#def get_all_users():
 
 
 
-
-#@app.route("/users/<id>")
-#def get_one_user(id):
-
-
-
-
-#@app.route("/orders")
-#def get_all_orders():
+@app.route("/users/<sid>")
+def get_one_user(sid):
+    one_user = db.session.query(User).filter(User.id==sid).all()
+    return jsonify(funcions.user_query(one_user))
 
 
+@app.route("/orders")
+def get_all_orders():
+    all_orders = Order.query.all()
+    return jsonify(funcions.order_query(all_orders))
 
 
-#@app.route("/orders/<id>")
-#def get_one_order(id):
+@app.route("/orders/<sid>")
+def get_one_order(sid):
+    one_order = db.session.query(Order).filter(Order.id==sid)
+    return jsonify(funcions.order_query(one_order))
 
 
+@app.route("/offers")
+def get_all_offers():
+    all_offers = Offer.query.all()
+    return jsonify(funcions.offer_query(all_offers))
 
 
-#@app.route("/offers")
-#def get_all_offers():
-
-
-
+if __name__ == '__main__':
+    app.run()
 
 
