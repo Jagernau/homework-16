@@ -77,7 +77,7 @@ for i in funcions.get_js_orders():
         name=i["name"], 
         description=i["description"], 
         start_date=datetime.date(year=int(year_start), month=int(month_start), day=int(day_start)),
-        end_date=datetime.date(year=int(year_end), month=int(month_end), day=int(day_start)),
+        end_date=datetime.date(year=int(year_end), month=int(month_end), day=int(day_end)),
         address=i["address"], 
         price=i["price"], 
         customer_id=i["customer_id"], 
@@ -129,10 +129,32 @@ def get_one_user(sid):
     return jsonify(funcions.user_query(one_user))
 
 
-@app.route("/orders")
+@app.route("/orders", methods=['GET', 'POST'])
 def get_all_orders():
-    all_orders = Order.query.all()
-    return jsonify(funcions.order_query(all_orders))
+    if request.method == 'GET':
+        all_orders = Order.query.all()
+        return jsonify(funcions.order_query(all_orders))
+    if request.method == 'POST':
+        order = loads(request.data)
+        month_start, day_start, year_start = i["start_date"].split("/")
+        month_end, day_end, year_end = i["end_date"].split("/")
+        new_order_obj = Order(
+            id=order['id'],
+            name=order['name'],
+            description=order['description'],
+            start_date=datetime.date(year=int(year_start), month=int(month_start), day=int(day_start)),
+            end_date=datetime.date(year=int(year_end), month=int(month_end), day=int(day_end)),
+            adress=order['address'],
+            price=order['price'],
+            customer_id=order['customer_id'],
+            executor_id=order['executor_id'])
+        db.session.add(new_order_obj)
+        db.session.commit()
+        db.session.close()
+        return "Заказ создан", 200
+            
+
+
 
 
 @app.route("/orders/<sid>")
@@ -141,10 +163,23 @@ def get_one_order(sid):
     return jsonify(funcions.order_query(one_order))
 
 
-@app.route("/offers")
+@app.route("/offers", methods=['GET','POST'])
 def get_all_offers():
-    all_offers = Offer.query.all()
-    return jsonify(funcions.offer_query(all_offers))
+    if request.method == 'GET':
+        all_offers = Offer.query.all()
+        return jsonify(funcions.offer_query(all_offers))
+    if request.method == 'POST':
+        offer = loads(request.data)
+        new_offer_obj = Offer(
+            id=offer["id"],
+            order_id=offer['order_id'],
+            executor_id=offer['executor_id']
+        )
+        db.session.add(new_offer_obj)
+        db.session.commit()
+        db.session.close()
+        return "Пользователь создан", 200
+
 
 
 if __name__ == '__main__':
