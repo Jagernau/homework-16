@@ -12,3 +12,7 @@ def get_js_orders():
         all_orders = load(read)
     return all_orders
 
+def get_js_offers():
+    with open("js_files/offer.json", "r") as read:
+        all_offers = load(read)
+    return all_offers
