@@ -204,17 +204,14 @@ def get_one_order(sid):
         db.session.add(order)
         db.session.commit()
         db.session.close()
-        return f"Заказ {sid} изменён"
+        return f"Заказ {sid} изменён", 200
 
     if request.method == 'DELETE':
         order = db.session.query(Order).get(sid)
         db.session.delete(order)
         db.session.commit()
         db.session.close()
-        return f"Заказ {sid} удалён"
-
-
-
+        return f"Заказ {sid} удалён", 200
 
 
 
@@ -238,7 +235,30 @@ def get_all_offers():
 
 
 
+@app.route("/offers/<sid>", methods=['GET', 'PUT', 'DELETE'])
+def get_one_offer(sid):
+    if request.method == 'GET':
+        one_offer = db.session.query(Offer).filter(Offer.id == sid)
+        return jsonify(funcions.offer_query(one_offer))
+    if request.method == 'PUT':
+        offer_data = loads(request.data)
+        offer = db.session.query(Offer).get(sid)
+
+        offer.order_id = offer_data['order_id']
+        offer.executor_id = offer_data['executor_id']
+        db.session.add(offer)
+        db.session.commit()
+        db.session.close()
+        return f"Предложение {sid} изменено", 200
+
+    if request.method == 'DELETE':
+        offer = db.session.query(Offer).get(sid)
+        db.session.delete(offer)
+        db.session.commit()
+        db.session.close()
+        return f"Предложение {sid} удалено", 200
+
+
 if __name__ == '__main__':
     app.run()
-
 
