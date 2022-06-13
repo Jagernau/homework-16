@@ -167,7 +167,7 @@ def get_all_orders():
             description=order['description'],
             start_date=datetime.date(year=int(year_start), month=int(month_start), day=int(day_start)),
             end_date=datetime.date(year=int(year_end), month=int(month_end), day=int(day_end)),
-            adress=order['address'],
+            address=order['address'],
             price=order['price'],
             customer_id=order['customer_id'],
             executor_id=order['executor_id'])
