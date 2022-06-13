@@ -123,10 +123,32 @@ def get_all_users():
 
 
 
-@app.route("/users/<sid>")
+@app.route("/users/<sid>", methods=['GET', 'PUT', 'DELETE'])
 def get_one_user(sid):
-    one_user = db.session.query(User).filter(User.id==sid).all()
-    return jsonify(funcions.user_query(one_user))
+    if request.method == 'GET':
+        one_user = db.session.query(User).filter(User.id==sid).all()
+        return jsonify(funcions.user_query(one_user))
+    if request.method == 'PUT':
+        user_data = loads(request.data)
+        user = db.session.query(User).get(sid)
+
+        user.first_name = user_data['first_name']
+        user.last_name = user_data['last_name']
+        user.phone = user_data['phone']
+        user.role = user_data['role']
+        user.email = user_data['email']
+        user.age = user_data['age']
+        db.session.add(user)
+        db.session.commit()
+        db.session.close()
+        return f"Пользователь с id {sid} изменён", 200
+
+    if request.method == 'DELETE':
+        db.session.delete(sid)
+        db.session.comm()
+        db.session.close()
+        return f"Пользователь с id {sid} удалён", 200
+
 
 
 @app.route("/orders", methods=['GET', 'POST'])
@@ -157,10 +179,20 @@ def get_all_orders():
 
 
 
-@app.route("/orders/<sid>")
+@app.route("/orders/<sid>", methods=['GET', 'PUT', 'DELETE'])
 def get_one_order(sid):
-    one_order = db.session.query(Order).filter(Order.id==sid)
-    return jsonify(funcions.order_query(one_order))
+    if request.method == 'GET':
+        one_order = db.session.query(Order).filter(Order.id==sid)
+        return jsonify(funcions.order_query(one_order))
+    if request.method == 'PUT':
+        order_data = loads(request.data)
+        order = db.session.query(Order).get(sid)
+
+        order.name=order_data['name']
+        order.description=order_data['description']
+
+        
+
 
 
 @app.route("/offers", methods=['GET','POST'])
@@ -178,7 +210,7 @@ def get_all_offers():
         db.session.add(new_offer_obj)
         db.session.commit()
         db.session.close()
-        return "Пользователь создан", 200
+        return "Предложение создано", 200
 
 
 
