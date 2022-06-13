@@ -144,8 +144,9 @@ def get_one_user(sid):
         return f"Пользователь с id {sid} изменён", 200
 
     if request.method == 'DELETE':
-        db.session.delete(sid)
-        db.session.comm()
+        user = db.session.query(User).get(sid)
+        db.session.delete(user)
+        db.session.commit()
         db.session.close()
         return f"Пользователь с id {sid} удалён", 200
 
@@ -158,8 +159,8 @@ def get_all_orders():
         return jsonify(funcions.order_query(all_orders))
     if request.method == 'POST':
         order = loads(request.data)
-        month_start, day_start, year_start = i["start_date"].split("/")
-        month_end, day_end, year_end = i["end_date"].split("/")
+        month_start, day_start, year_start = order["start_date"].split("/")
+        month_end, day_end, year_end = order["end_date"].split("/")
         new_order_obj = Order(
             id=order['id'],
             name=order['name'],
@@ -188,10 +189,33 @@ def get_one_order(sid):
         order_data = loads(request.data)
         order = db.session.query(Order).get(sid)
 
+        month_start, day_start, year_start = order_data["start_date"].split("/")
+        month_end, day_end, year_end = order_data["end_date"].split("/")
+
         order.name=order_data['name']
         order.description=order_data['description']
+        order.start_date=datetime.date(year=int(year_start), month=int(month_start), day=int(day_start))
+        order.end_date=datetime.date(year=int(year_end), month=int(month_end), day=int(day_end))
+        order.adress=order_data['address']
+        order.price=order_data['price']
+        order.customer_id=order_data['customer_id']
+        order.executor_id=order_data['executor_id']
 
-        
+        db.session.add(order)
+        db.session.commit()
+        db.session.close()
+        return f"Заказ {sid} изменён"
+
+    if request.method == 'DELETE':
+        order = db.session.query(Order).get(sid)
+        db.session.delete(order)
+        db.session.commit()
+        db.session.close()
+        return f"Заказ {sid} удалён"
+
+
+
+
 
 
 
