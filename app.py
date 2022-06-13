@@ -196,7 +196,7 @@ def get_one_order(sid):
         order.description=order_data['description']
         order.start_date=datetime.date(year=int(year_start), month=int(month_start), day=int(day_start))
         order.end_date=datetime.date(year=int(year_end), month=int(month_end), day=int(day_end))
-        order.adress=order_data['address']
+        order.address=order_data['address']
         order.price=order_data['price']
         order.customer_id=order_data['customer_id']
         order.executor_id=order_data['executor_id']
