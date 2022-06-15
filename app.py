@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-
+from sqlalchemy.orm import relationship
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Column, Integer, ForeignKey, Date, Text, Float
 from json import loads
@@ -8,7 +8,7 @@ import funcions
 import datetime
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
 app.config['JSON_SORT_KEYS'] = False
 app.config['JSON_AS_ASCII'] = False
 
@@ -36,7 +36,10 @@ class Order(db.Model):
     price = Column(Float)
     customer_id = Column(Integer, ForeignKey("user.id"))
     executor_id = Column(Integer, ForeignKey("user.id"))
-    #users = relationship("User")
+    customer = relationship("User", foreign_keys=[customer_id])
+    executor = relationship("User", foreign_keys=[executor_id])
+
+
 #customer_id - id создателя, от user_id
 #executor_id - id исполнителя, от user_id
 
@@ -44,19 +47,20 @@ class Order(db.Model):
 class Offer(db.Model):
     __tablename__ = "offer"
     id = Column(Integer, primary_key=True)
-    order_id = Column(Integer, ForeignKey("user.id"))
+    order_id = Column(Integer, ForeignKey("order.id"))
     executor_id = Column(Integer, ForeignKey("user.id"))
-    #orders = relationship("Order")
-    #users  = relationship("User")
+    order = relationship("Order", foreign_keys=[order_id])
+    executor = relationship("User", foreign_keys=[executor_id])
+
+
 #executor_id - зависит от usr_id
 #order_id- зависит от order_id
 
-db.drop_all()
+
 db.create_all()
 
 
-
-for i in funcions.get_js_users():
+for i in funcions.get_files_users():
     db.session.add(User(
         id=i["id"], 
         first_name=i["first_name"], 
@@ -68,16 +72,13 @@ for i in funcions.get_js_users():
     ))
 
 
-for i in funcions.get_js_orders():
-    month_start, day_start, year_start = i["start_date"].split("/")
-    month_end, day_end, year_end = i["end_date"].split("/")
-
+for i in funcions.get_files_orders():
     db.session.add(Order(
         id=i["id"], 
         name=i["name"], 
         description=i["description"], 
-        start_date=datetime.date(year=int(year_start), month=int(month_start), day=int(day_start)),
-        end_date=datetime.date(year=int(year_end), month=int(month_end), day=int(day_end)),
+        start_date=datetime.datetime.strptime(i["start_date"], '%m/%d/%Y'),
+        end_date=datetime.datetime.strptime(i["end_date"], '%m/%d/%Y'),
         address=i["address"], 
         price=i["price"], 
         customer_id=i["customer_id"], 
@@ -85,7 +86,7 @@ for i in funcions.get_js_orders():
     ))
 
 
-for i in funcions.get_js_offers():
+for i in funcions.get_files_offers():
     db.session.add(Offer(
         id=i["id"],
         order_id=i["order_id"],
@@ -117,9 +118,6 @@ def get_all_users():
         db.session.commit()
         db.session.close()
         return "Пользователь добавлен", 200
-
-
-
 
 
 
@@ -159,14 +157,12 @@ def get_all_orders():
         return jsonify(funcions.order_query(all_orders))
     if request.method == 'POST':
         order = loads(request.data)
-        month_start, day_start, year_start = order["start_date"].split("/")
-        month_end, day_end, year_end = order["end_date"].split("/")
         new_order_obj = Order(
             id=order['id'],
             name=order['name'],
             description=order['description'],
-            start_date=datetime.date(year=int(year_start), month=int(month_start), day=int(day_start)),
-            end_date=datetime.date(year=int(year_end), month=int(month_end), day=int(day_end)),
+            start_date=datetime.datetime.strptime(order["start_date"], '%m/%d/%Y'),
+            end_date=datetime.datetime.strptime(order["end_date"], '%m/%d/%Y'),
             address=order['address'],
             price=order['price'],
             customer_id=order['customer_id'],
@@ -178,8 +174,6 @@ def get_all_orders():
             
 
 
-
-
 @app.route("/orders/<sid>", methods=['GET', 'PUT', 'DELETE'])
 def get_one_order(sid):
     if request.method == 'GET':
@@ -189,13 +183,11 @@ def get_one_order(sid):
         order_data = loads(request.data)
         order = db.session.query(Order).get(sid)
 
-        month_start, day_start, year_start = order_data["start_date"].split("/")
-        month_end, day_end, year_end = order_data["end_date"].split("/")
 
         order.name=order_data['name']
         order.description=order_data['description']
-        order.start_date=datetime.date(year=int(year_start), month=int(month_start), day=int(day_start))
-        order.end_date=datetime.date(year=int(year_end), month=int(month_end), day=int(day_end))
+        order.start_date=datetime.datetime.strptime(order_data["start_date"], '%m/%d/%Y')
+        order.end_date=datetime.datetime.strptime(order_data["end_date"], '%m/%d/%Y')
         order.address=order_data['address']
         order.price=order_data['price']
         order.customer_id=order_data['customer_id']
