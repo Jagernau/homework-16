@@ -3,12 +3,14 @@ from sqlalchemy.orm import relationship
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Column, Integer, ForeignKey, Date, Text, Float
 from json import loads
+import os.path
 
 import funcions
 import datetime
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['JSON_SORT_KEYS'] = False
 app.config['JSON_AS_ASCII'] = False
 
@@ -56,44 +58,43 @@ class Offer(db.Model):
 #executor_id - зависит от usr_id
 #order_id- зависит от order_id
 
+if os.path.exists('./test.db') == False:
+    db.create_all() # и тогда заполнить колонки информацией?
 
-db.create_all()
-
-
-for i in funcions.get_files_users():
-    db.session.add(User(
-        id=i["id"], 
-        first_name=i["first_name"], 
-        last_name=i["last_name"], 
-        age=i["age"], 
-        email=i["email"], 
-        role=i["role"], 
-        phone=i["phone"]
-    ))
-
-
-for i in funcions.get_files_orders():
-    db.session.add(Order(
-        id=i["id"], 
-        name=i["name"], 
-        description=i["description"], 
-        start_date=datetime.datetime.strptime(i["start_date"], '%m/%d/%Y'),
-        end_date=datetime.datetime.strptime(i["end_date"], '%m/%d/%Y'),
-        address=i["address"], 
-        price=i["price"], 
-        customer_id=i["customer_id"], 
-        executor_id=i["executor_id"]
-    ))
+    for i in funcions.get_files_users():
+        db.session.add(User(
+            id=i["id"], 
+            first_name=i["first_name"], 
+            last_name=i["last_name"], 
+            age=i["age"], 
+            email=i["email"], 
+            role=i["role"], 
+            phone=i["phone"]
+        ))
 
 
-for i in funcions.get_files_offers():
-    db.session.add(Offer(
-        id=i["id"],
-        order_id=i["order_id"],
-        executor_id=i["executor_id"]
-    ))
+    for i in funcions.get_files_orders():
+        db.session.add(Order(
+            id=i["id"], 
+            name=i["name"], 
+            description=i["description"], 
+            start_date=datetime.datetime.strptime(i["start_date"], '%m/%d/%Y'),
+            end_date=datetime.datetime.strptime(i["end_date"], '%m/%d/%Y'),
+            address=i["address"], 
+            price=i["price"], 
+            customer_id=i["customer_id"], 
+            executor_id=i["executor_id"]
+        ))
 
-db.session.commit()
+
+    for i in funcions.get_files_offers():
+        db.session.add(Offer(
+            id=i["id"],
+            order_id=i["order_id"],
+            executor_id=i["executor_id"]
+        ))
+
+    db.session.commit()
 
 
 
